@@ -42,7 +42,6 @@ You should see the following output:
 	Creating cli                    ... done
 
 
-
 ### Create and Join Channel
 
 When deploying a local network, we can use the `cli` container to do operations in the network. For that, we need to be inside the container. Use the following command to get inside it.
@@ -64,25 +63,74 @@ Join the channel.
 
 ### Install and Instantiate Chaincode
 
-Still inside the `cli` container, install the chaincode.
+From the `/chaincode/fabcar/go` folder, download the chaincode package dependencies.
+
+	go mod vendor
+
+Inside the `cli` container navigate to `/opt/gopath/src/github.com/chaincode/fabcar/go`.
+
+	cd /opt/gopath/src/github.com/chaincode/fabcar/go
+
+Package the chaincode.
+
+	peer lifecycle chaincode package fabcar.tar.gz --path github.com/chaincode/fabcar/go/ --lang golang --label fabcar_1.0
 	
-    peer chaincode install -n fabcar -v 1.0 -p github.com/chaincode/fabcar/go/
+With the `fabcar.tar.gz` package generated, install the chaincode.
 
-Instantiate the chaincode.
+	peer lifecycle chaincode install fabcar.tar.gz
 
-    peer chaincode instantiate 
-		-o orderer.example.com:7050 
-		--tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem 
-		-C mychannel 
-		-n fabcar 
-		-v 1.0 
-		-c '{"Args":["init"]}'
+Check the installation status of the chaincode inside the peer.
 
-Make sure everything is in order by checking the instantiated chaincodes on the channel with the command:
-
-    peer chaincode list --instantiated -C mychannel
+	peer lifecycle chaincode queryinstalled
 
 **Print your terminal and save it as `inst0.jpg`**
+
+From the previous step, copy and save the Package ID from the installed chaincode. (Ex: `fabcar_1.0:93c9df9bf47532689ed6d78654787557740439fdd7435e06b5dcc63e07fe3cea`)
+
+Now, approve the chaincode definition for the organization. Substitute `<PACKAGE_ID>` on the command with the value saved before. 
+
+	peer lifecycle chaincode approveformyorg 
+		-o orderer.example.com:7050 
+		--ordererTLSHostnameOverride orderer.example.com 
+		--channelID mychannel 
+		--name fabcar 
+		--version 1.0 
+		--package-id <PACKAGE_ID>
+		--sequence 1 
+		--tls 
+		--cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+
+Check the commit readiness from the chaincode. It's expected that the approval value is set to `true`.
+
+	peer lifecycle chaincode checkcommitreadiness 
+		--channelID mychannel 
+		--name fabcar --version 1.0 
+		--sequence 1 
+		--tls 
+		--cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem 
+		--output json
+
+**Print your terminal and save it as `inst1.jpg`**
+
+Commit the chaincode defintion to the channel
+
+	peer lifecycle chaincode commit 
+		-o orderer.example.com:7050 
+		--ordererTLSHostnameOverride orderer.example.com 
+		--channelID mychannel 
+		--name fabcar 
+		--version 1.0 
+		--sequence 1 
+		--tls 
+		--cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem 
+		--peerAddresses peer0.org1.example.com:7051 
+		--tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+
+Check if the chaincode was successfully commited to the channel.
+
+	peer lifecycle chaincode querycommitted --channelID mychannel --name fabcar
+
+**Print your terminal and save it as `inst2.jpg`**
 
 ## FABCAR Chaincode
 
