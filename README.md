@@ -4,6 +4,8 @@ Now you will create your own permissioned blockchain. For that, you will bring u
 
 To accomplish that, we recommend you use a UNIX-like machine (Linux/macOS). Besides that, we will need to install cURL and Docker.
 
+Note: Whenever you want to start again fresh, make sure you clear your Docker containers and volumes. 
+
 ## Install the prerequisites
 
 - Install cURL (https://curl.haxx.se/download.html) 
