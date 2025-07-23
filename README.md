@@ -1,7 +1,7 @@
 # GoLedger Challenge
 
-Now you will create your own permissioned blockchain. For that, you will bring up a network, create a channel, join a peer to that channel, install and instantiate a smart contract (aka chaincode in Hyperledger Fabric). After that, you will issue a transaction in the chaincode, change the source code of the chaincode and upgrade the network with the new smart contract. In **Part I** we will provide step-by-step instructions and in **Part II** you must complete the instructions on your own.
-	
+Now you will create your own permissioned blockchain. For that, you will bring up a network, create a channel, join a peer to that channel, install and instantiate a smart contract (aka chaincode in Hyperledger Fabric). After that, you will issue a transaction in the chaincode, change the source code of the chaincode and upgrade the network with the new smart contract. In Part I we will provide step-by-step instructions and in Part II you must complete the instructions on your own.
+
 To accomplish that, we recommend you use a UNIX-like machine (Linux/macOS). Besides that, we will need to install cURL and Docker.
 
 ## Install the prerequisites
@@ -50,11 +50,12 @@ When deploying a local network, we can use the `cli` container to do operations 
 
 Create the channel.
 
-    peer channel create 
-		-o orderer.example.com:7050 
-		-c mychannel 
-		-f ./channel-artifacts/channel.tx 
-		--tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+    peer channel create \
+        -o orderer.example.com:7050 \
+        -c mychannel \
+        -f ./channel-artifacts/channel.tx \
+        --tls \
+        --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
 	
 Join the channel.
 
@@ -73,7 +74,10 @@ Inside the `cli` container navigate to `/opt/gopath/src/github.com/chaincode/fab
 
 Package the chaincode.
 
-	peer lifecycle chaincode package fabcar.tar.gz --path github.com/chaincode/fabcar/go/ --lang golang --label fabcar_1.0
+	peer lifecycle chaincode package fabcar.tar.gz \
+		--path github.com/chaincode/fabcar/go/ \
+		--lang golang \
+		--label fabcar_1.0
 	
 With the `fabcar.tar.gz` package generated, install the chaincode.
 
@@ -89,46 +93,49 @@ From the previous step, copy and save the Package ID from the installed chaincod
 
 Now, approve the chaincode definition for the organization. Substitute `<PACKAGE_ID>` on the command with the value saved before. 
 
-	peer lifecycle chaincode approveformyorg 
-		-o orderer.example.com:7050 
-		--ordererTLSHostnameOverride orderer.example.com 
-		--channelID mychannel 
-		--name fabcar 
-		--version 1.0 
-		--package-id <PACKAGE_ID>
-		--sequence 1 
-		--tls 
+	peer lifecycle chaincode approveformyorg \
+		-o orderer.example.com:7050 \
+		--ordererTLSHostnameOverride orderer.example.com \
+		--channelID mychannel \
+		--name fabcar \
+		--version 1.0 \
+		--package-id <PACKAGE_ID> \
+		--sequence 1 \
+		--tls \
 		--cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
 
 Check the commit readiness from the chaincode. It's expected that the approval value is set to `true`.
 
-	peer lifecycle chaincode checkcommitreadiness 
-		--channelID mychannel 
-		--name fabcar --version 1.0 
-		--sequence 1 
-		--tls 
-		--cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem 
+	peer lifecycle chaincode checkcommitreadiness \
+		--channelID mychannel \
+		--name fabcar \
+		--version 1.0 \
+		--sequence 1 \
+		--tls \
+		--cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem \
 		--output json
 
 **Print your terminal and save it as `inst1.jpg`**
 
 Commit the chaincode defintion to the channel
 
-	peer lifecycle chaincode commit 
-		-o orderer.example.com:7050 
-		--ordererTLSHostnameOverride orderer.example.com 
-		--channelID mychannel 
-		--name fabcar 
-		--version 1.0 
-		--sequence 1 
-		--tls 
-		--cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem 
-		--peerAddresses peer0.org1.example.com:7051 
+	peer lifecycle chaincode commit \
+		-o orderer.example.com:7050 \
+		--ordererTLSHostnameOverride orderer.example.com \
+		--channelID mychannel \
+		--name fabcar \
+		--version 1.0 \
+		--sequence 1 \
+		--tls \
+		--cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem \
+		--peerAddresses peer0.org1.example.com:7051 \
 		--tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
 
 Check if the chaincode was successfully commited to the channel.
 
-	peer lifecycle chaincode querycommitted --channelID mychannel --name fabcar
+	peer lifecycle chaincode querycommitted \
+		--channelID mychannel \
+		--name fabcar
 
 **Print your terminal and save it as `inst2.jpg`**
 
@@ -140,24 +147,15 @@ The chaincode you just instantiated in your newly created channel is called FABC
 
 Your chaincode is instantiated clean, so let’s initialize the ledger with a few cars. The FABCAR chaincode provides a operation so that you can do that with ease. To invoke a transaction you can run the following command (inside the `cli` container):
 
-	peer chaincode invoke 
-		-o orderer.example.com:7050 
-		-C mychannel 
-		-n fabcar 
-		-c '{"function":"initLedger","Args":[]}' 
-		--waitForEvent 
-		--tls 
-		--cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem 
-		--peerAddresses peer0.org1.example.com:7051 
-		--tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+	peer chaincode invoke -o orderer.example.com:7050 -C mychannel -n fabcar -c '{"function":"initLedger","Args":[]}' --waitForEvent --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem --peerAddresses peer0.org1.example.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
 
 
 
 Now check the cars in the ledger:
 
-	peer chaincode query 
-		-C mychannel 
-		-n fabcar 
+	peer chaincode query \
+		-C mychannel \
+		-n fabcar \
 		-c '{"Args":["queryAllCars"]}'
 
 **Print your terminal and save it as `query0.jpg`**
